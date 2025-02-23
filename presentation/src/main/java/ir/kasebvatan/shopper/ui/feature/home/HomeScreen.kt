@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,23 +31,29 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
         }
 
         is HomeScreenUIEvents.Success -> {
-            val data = (uiState as HomeScreenUIEvents.Success).data
-
-            LazyColumn {
-
-                items(data) { product ->
-                    ProductItem(product)
-                }
-
+            val data = (uiState as HomeScreenUIEvents.Success)
+            Column {
+                HomeProductRow(data.featured, "Featured")
+                HomeProductRow(data.popularProducts, "Popular")
             }
-
         }
+
 
         is HomeScreenUIEvents.Error -> {
             Text(text = (uiState as HomeScreenUIEvents.Error).message)
         }
     }
 
+}
+
+
+@Composable
+fun HomeProductRow(products: List<Product>, title: String) {
+    LazyRow {
+        items(products) { item ->
+            ProductItem(item)
+        }
+    }
 }
 
 @Composable

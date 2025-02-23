@@ -3,7 +3,7 @@ package ir.kasebvatan.domain.network
 import ir.kasebvatan.domain.model.Product
 
 interface NetworkService {
-    suspend fun getProducts(): ResultWrapper<List<Product>>
+    suspend fun getProducts(category: String?): ResultWrapper<List<Product>>
 
 }
 
