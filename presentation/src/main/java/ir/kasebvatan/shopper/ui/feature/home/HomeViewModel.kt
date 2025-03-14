@@ -1,5 +1,6 @@
 package ir.kasebvatan.shopper.ui.feature.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.kasebvatan.domain.model.Product
@@ -28,7 +29,7 @@ class HomeViewModel(
             val featured = getProducts("electronics")
             val popular = getProducts("jewelery")
             val categories = getCategories()
-            if (featured.isEmpty() || popular.isEmpty()) {
+            if (featured.isEmpty() || popular.isEmpty() || categories.isEmpty()) {
                 _uiState.value = HomeScreenUIEvents.Error("Failed to load products")
                 return@launch
             }
@@ -39,6 +40,7 @@ class HomeViewModel(
 
     private suspend fun getCategories(): List<String> {
         getCategoryUseCase.execute().let { result ->
+            Log.d("CATEGORIES", result.toString())
             return when (result) {
                 is ResultWrapper.Success -> {
                     result.value

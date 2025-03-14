@@ -2,6 +2,7 @@ package ir.kasebvatan.shopper.ui.feature.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,9 +52,25 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinViewModel()) {
     val uiState = viewModel.uiState.collectAsState().value
-    var hint by remember {
-        mutableStateOf("")
+
+    var loading by remember {
+        mutableStateOf(false)
     }
+    var error by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var featured by remember {
+        mutableStateOf<List<Product>>(emptyList())
+    }
+
+    var popular by remember {
+        mutableStateOf<List<Product>>(emptyList())
+    }
+    var categories by remember {
+        mutableStateOf<List<String>>(emptyList())
+    }
+
 
     Scaffold {
         Surface(
@@ -62,43 +79,115 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                 .padding(it)
         ) {
             when (uiState) {
+
                 is HomeScreenUIEvents.Loading -> {
-                    CircularProgressIndicator()
+                    loading = true
+                    error = null
                 }
 
                 is HomeScreenUIEvents.Success -> {
                     val data = (uiState as HomeScreenUIEvents.Success)
-                    LazyColumn {
-                        item {
-                            ProfileHeader()
-                            Spacer(Modifier.size(16.dp))
-                            SearchBar(hint) { cb ->
-                                hint = cb
-                            }
-                            Spacer(Modifier.size(16.dp))
-
-                        }
-                        item {
-                            if (data.featured.isNotEmpty()) {
-                                HomeProductRow(data.featured, "Featured")
-                                Spacer(Modifier.size(16.dp))
-                            }
-                            if (data.popularProducts.isNotEmpty()) HomeProductRow(
-                                data.popularProducts,
-                                "Popular"
-                            )
-                        }
-                    }
+                    featured = data.featured
+                    popular = data.popularProducts
+                    categories = data.categories
+                    loading = false
+                    error = null
                 }
 
 
                 is HomeScreenUIEvents.Error -> {
-                    Text(text = (uiState as HomeScreenUIEvents.Error).message)
+                    val errorMsg = (uiState as HomeScreenUIEvents.Error).message
+                    loading = false
+                    error = errorMsg
                 }
             }
+
+            HomeContent(
+                featured,
+                popular,
+                categories,
+                loading,
+                error
+            )
         }
     }
 
+
+}
+
+@Composable
+fun HomeContent(
+    featured: List<Product>,
+    popularProducts: List<Product>,
+    categories: List<String>,
+    loading: Boolean = false,
+    errorMsg: String? = null
+) {
+    var hint by remember {
+        mutableStateOf("")
+    }
+    LazyColumn {
+        item {
+            ProfileHeader()
+            Spacer(Modifier.size(16.dp))
+            SearchBar(hint) { cb ->
+                hint = cb
+            }
+            Spacer(Modifier.size(16.dp))
+
+        }
+        item {
+
+            if (loading) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(50.dp))
+                    Text("Loading...", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+            errorMsg?.let {
+                Text(it, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            if (categories.isNotEmpty()) {
+                LazyRow {
+
+                    items(categories) { category ->
+                        Text(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            text = category.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(8.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.size(16.dp))
+
+            }
+            if (featured.isNotEmpty()) {
+                HomeProductRow(featured, "Featured")
+                Spacer(Modifier.size(16.dp))
+            }
+            if (popularProducts.isNotEmpty()) {
+                HomeProductRow(
+                    popularProducts,
+                    "Popular"
+                )
+                Spacer(Modifier.size(16.dp))
+            }
+
+
+        }
+    }
 
 }
 
